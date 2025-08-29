@@ -1,0 +1,15 @@
+# Source files
+src/
+tsconfig.json
+.gitignore
+
+# Development files
+node_modules/
+*.log
+.DS_Store
+
+# Example files
+example-api.yaml
+
+# Build artifacts (keep dist/)
+# dist/ should be included in the package
