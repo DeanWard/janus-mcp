@@ -1,6 +1,6 @@
 {
   "name": "janus-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Janus - An intelligent OpenAPI MCP server for token-optimized API exploration",
   "main": "dist/index.js",
   "bin": {
@@ -43,10 +43,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/janus-mcp.git"
+    "url": "git+https://github.com/DeanWard/janus-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/janus-mcp/issues"
+    "url": "https://github.com/DeanWard/janus-mcp/issues"
   },
-  "homepage": "https://github.com/your-username/janus-mcp#readme"
+  "homepage": "https://github.com/DeanWard/janus-mcp#readme"
 }
