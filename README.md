@@ -1,22 +1,22 @@
-# Janus - OpenAPI MCP Server
+# Janus MCP
 
-An intelligent Model Context Protocol (MCP) server for exploring OpenAPI specifications. Janus provides LLMs with token-optimized access to API documentation through session-based querying and selective data retrieval.
+Janus MCP is a Model Context Protocol server that enables AI assistants to understand and interact with OpenAPI specifications. It provides your AI with deep insight into API structures, making API integration projects faster and more accurate.
 
-## Features
+## What It Does
 
-- **Session Management**: Initialize sessions with OpenAPI JSON/YAML files
-- **Session Persistence**: Sessions are automatically saved and restored across server restarts
-- **Token Optimization**: Selective data retrieval - only fetch what you need
-- **Comprehensive Querying**: Access endpoints, parameters, request/response schemas, and components
-- **Filtering Support**: Filter by tags, status codes, and component types
-- **Multiple Format Support**: Supports both OpenAPI 2.0 (Swagger) and OpenAPI 3.x specifications
-- **Automatic Cleanup**: Sessions older than 7 days are automatically removed
+Janus MCP transforms how you and your AI assistant work together on projects involving APIs. Instead of manually parsing OpenAPI specifications or struggling to understand complex API structures, your AI can directly query and explore API documentation to provide precise, context-aware assistance.
 
-## Quick Setup
+When working on API integration projects, your AI assistant can:
 
-### Step 1: Add to Cursor
+- Instantly understand the complete structure of any OpenAPI-compliant API
+- Provide accurate endpoint information including parameters, request bodies, and response schemas
+- Help generate correct API calls with proper data structures
+- Explain API relationships and data flows
+- Assist with error handling by understanding expected error responses
 
-Add Janus to your MCP configuration in `~/.cursor/mcp.json`:
+## Installation
+
+Add Janus MCP to your AI assistant's configuration:
 
 ```json
 {
@@ -29,270 +29,50 @@ Add Janus to your MCP configuration in `~/.cursor/mcp.json`:
 }
 ```
 
-### Step 2: Restart Cursor
+## How It Works
 
-Restart Cursor to load Janus.
+Janus MCP creates sessions from OpenAPI specification files (JSON or YAML) and provides your AI with tools to explore them systematically. Each session maintains the API context, allowing for efficient querying without repeatedly parsing large specification files.
 
-### Step 3: Start Exploring
+Your AI assistant can initialize a session with any OpenAPI specification and then:
 
-Ask Cursor to:
-- "Initialize a Janus session with my OpenAPI file"
-- "Show me all GET endpoints from my API"
-- "Get details for the /users endpoint"
+- List all available endpoints with filtering by tags, HTTP methods, or other criteria
+- Get detailed information about specific endpoints including parameters, request schemas, and response formats
+- Explore reusable components like data models, security schemes, and error schemas
+- Navigate complex APIs with dozens or hundreds of endpoints organized by functional areas
+- Understand relationships between endpoints, data models, and business workflows
 
-That's it! 🎉
+## Example Workflow
 
-### Available Tools
+When you're building an application that needs to integrate with a REST API:
 
-#### 1. `initialize_session`
-Initialize a new session with an OpenAPI specification file.
+1. You provide the OpenAPI specification file to your AI assistant
+2. The AI initializes a Janus session and explores the API structure, understanding its scope and organization
+3. As you describe what you want to build, the AI can reference exact endpoint details, parameter requirements, and response formats
+4. The AI understands complex data relationships and can suggest optimal integration patterns
+5. The AI generates accurate integration code with proper error handling, data validation, and security considerations
+6. Throughout development, the AI maintains context about the API structure for ongoing assistance
 
-**Parameters:**
-- `filePath` (string, required): Path to the OpenAPI JSON or YAML file
+For example, when working with an enterprise compliance API with 88 endpoints across 24 functional areas, your AI can:
 
-**Returns:**
-- `sessionId`: Unique identifier for the session
-- `success`: Boolean indicating success
-- `message`: Status message
+- Filter endpoints by tags like "Documents", "Users", or "Audit Logs" to focus on relevant functionality
+- Understand that document creation requires specific audit notes and sensitivity levels
+- Navigate complex workflows like document approval processes with proper status transitions
+- Generate code that handles OAuth2 authentication and encrypted data properly
+- Suggest appropriate error handling for different endpoint response patterns
 
-**Example:**
-```json
-{
-  "filePath": "/path/to/api-spec.yaml"
-}
-```
+## Capabilities
 
-#### 2. `get_session_info`
-Get basic information about an OpenAPI specification.
+The tools available to your AI assistant include:
 
-**Parameters:**
-- `sessionId` (string, required): The session ID
+- Session management for multiple OpenAPI specifications
+- Advanced endpoint filtering by tags, HTTP methods, and operational characteristics
+- Detailed endpoint inspection with selective data retrieval for optimal performance
+- Comprehensive component and schema exploration including security schemes
+- Tag-based organization understanding for large, complex APIs
+- Support for APIs with sophisticated authentication, workflow, and data sensitivity requirements
 
-**Returns:**
-- `title`: API title
-- `version`: API version
-- `description`: API description
-- `baseUrl`: Base URL of the API
+This enables your AI to provide contextually accurate assistance whether you're exploring a new API, implementing complex business workflows, debugging integration issues, or extending existing functionality. The tool scales from simple APIs with a few endpoints to enterprise systems with hundreds of endpoints and complex data relationships.
 
-#### 3. `list_endpoints`
-List all available endpoints in the OpenAPI specification.
+## Repository
 
-**Parameters:**
-- `sessionId` (string, required): The session ID
-- `tags` (array, optional): Filter endpoints by tags
-- `methods` (array, optional): Filter endpoints by HTTP methods (GET, POST, PUT, DELETE, etc.)
-
-**Returns:**
-- `count`: Number of endpoints found
-- `endpoints`: Array of endpoint summaries with path, method, operationId, summary, description, and tags
-
-#### 4. `get_endpoint_details`
-Get detailed information about a specific endpoint with token optimization options.
-
-**Parameters:**
-- `sessionId` (string, required): The session ID
-- `path` (string, required): The endpoint path (e.g., '/users/{id}')
-- `method` (string, required): The HTTP method (GET, POST, PUT, DELETE, etc.)
-- `includeParameters` (boolean, default: true): Include parameter information
-- `includeRequestBody` (boolean, default: true): Include request body schema
-- `includeResponses` (boolean, default: true): Include response information
-- `includeSecurity` (boolean, default: false): Include security requirements
-- `includeExamples` (boolean, default: false): Include examples in schemas
-- `includeSchemas` (boolean, default: true): Include detailed schema information
-- `responseStatusCodes` (array, optional): Filter responses by status codes
-
-**Returns:**
-Detailed endpoint information based on the included options.
-
-#### 5. `get_tags`
-Get all available tags in the OpenAPI specification.
-
-**Parameters:**
-- `sessionId` (string, required): The session ID
-
-**Returns:**
-- `count`: Number of tags
-- `tags`: Array of tag names
-
-#### 6. `get_components`
-Get reusable components from the OpenAPI specification.
-
-**Parameters:**
-- `sessionId` (string, required): The session ID
-- `componentType` (string, optional): Specific component type (schemas, responses, parameters, etc.)
-
-**Returns:**
-Component definitions based on the specified type or all components if no type is specified.
-
-#### 7. `remove_session`
-Remove a session and free up memory.
-
-**Parameters:**
-- `sessionId` (string, required): The session ID to remove
-
-**Returns:**
-- `success`: Boolean indicating if the session was removed
-- `message`: Status message
-
-## Token Optimization Strategies
-
-The server provides several ways to optimize token usage:
-
-### 1. Selective Data Retrieval
-Use the boolean flags in `get_endpoint_details` to only fetch the data you need:
-
-```json
-{
-  "sessionId": "session-id",
-  "path": "/users/{id}",
-  "method": "GET",
-  "includeParameters": true,
-  "includeRequestBody": false,
-  "includeResponses": true,
-  "includeSecurity": false,
-  "includeExamples": false,
-  "includeSchemas": false,
-  "responseStatusCodes": ["200", "404"]
-}
-```
-
-### 2. Progressive Discovery
-Start with high-level information and drill down as needed:
-
-1. First, get session info and list endpoints
-2. Then, get basic endpoint details without schemas
-3. Finally, get specific schemas or examples only when needed
-
-### 3. Filtering Support
-Use tags and HTTP methods to focus on specific API sections:
-
-**Filter by tags:**
-```json
-{
-  "sessionId": "session-id",
-  "tags": ["users", "authentication"]
-}
-```
-
-**Filter by HTTP methods:**
-```json
-{
-  "sessionId": "session-id",
-  "methods": ["GET", "POST"]
-}
-```
-
-**Combine filters:**
-```json
-{
-  "sessionId": "session-id",
-  "tags": ["pets"],
-  "methods": ["GET"]
-}
-```
-
-## Example Conversations
-
-### Getting Started
-```
-You: "Initialize a Janus session with my API spec at ./api-docs.yaml"
-Janus: "✅ Session initialized! Your API 'Pet Store API v1.0.0' is ready to explore."
-
-You: "Show me all the GET endpoints"
-Janus: "Found 15 GET endpoints: /pets, /pets/{id}, /users, /orders..."
-
-You: "Get details for the /pets endpoint but only include parameters and responses, skip schemas"
-Janus: "The GET /pets endpoint accepts 'limit' and 'offset' query parameters..."
-```
-
-### Token-Optimized Queries
-```
-You: "List only POST and PUT endpoints tagged with 'admin'"  
-Janus: "Found 3 admin endpoints for data modification: POST /users, PUT /users/{id}..."
-
-You: "Show me the /auth/login endpoint details, but only the 200 and 401 responses"
-Janus: "POST /auth/login returns 200 with JWT token or 401 for invalid credentials..."
-```
-
-### Progressive Discovery
-```
-You: "What tags are available in this API?"
-Janus: "Found 8 tags: users, pets, orders, auth, admin, billing, reports, webhooks"
-
-You: "Show me all endpoints tagged with 'billing'"
-Janus: "Billing endpoints: GET /billing/invoices, POST /billing/payments..."
-```
-
-## Error Handling
-
-All tools return structured responses. On error, the response will include:
-
-```json
-{
-  "error": true,
-  "message": "Description of the error"
-}
-```
-
-Common errors:
-- "Session not found" - Invalid or expired session ID
-- "Failed to parse OpenAPI spec" - Invalid OpenAPI file
-- "Endpoint not found" - Invalid path/method combination
-
-## Advanced Usage
-
-### Multiple MCP Clients
-
-Janus works with any MCP-compatible client:
-
-**Cursor**:
-```json
-{
-  "mcpServers": {
-    "janus": {
-      "command": "npx",
-      "args": ["janus-mcp"]
-    }
-  }
-}
-```
-
-**Claude Desktop**:
-```json
-{
-  "mcpServers": {
-    "janus": {
-      "command": "npx",
-      "args": ["janus-mcp"]
-    }
-  }
-}
-```
-
-### Supported OpenAPI Features
-
-✅ **Specifications**: OpenAPI 2.0 (Swagger), 3.0.x, and 3.1.0  
-✅ **Formats**: JSON and YAML files  
-✅ **Methods**: All HTTP methods (GET, POST, PUT, DELETE, etc.)  
-✅ **Parameters**: Path, query, header, and cookie parameters  
-✅ **Schemas**: Request/response body schemas and examples  
-✅ **Security**: Authentication and authorization definitions  
-✅ **Organization**: Tags, components, and reusable definitions  
-
-### Session Management
-
-- **Automatic Persistence**: Sessions survive Cursor restarts
-- **Smart Cleanup**: Old sessions (7+ days) are automatically removed  
-- **File Validation**: Checks if OpenAPI files still exist before loading
-- **Storage Location**: `~/.janus-mcp/sessions.json`
-
-### Token Optimization Tips
-
-🎯 **Start Broad**: Get session info and list endpoints first  
-🔍 **Filter Smart**: Use method and tag filters to reduce noise  
-📊 **Selective Details**: Only request the data you need  
-🚀 **Progressive Discovery**: Explore incrementally rather than all-at-once
-
-## License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
+Source code and issues: https://github.com/DeanWard/janus-mcp
