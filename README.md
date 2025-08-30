@@ -31,7 +31,7 @@ Add Janus MCP to your AI assistant's configuration:
 
 ## How It Works
 
-Janus MCP creates sessions from OpenAPI specification files (JSON or YAML) and provides your AI with tools to explore them systematically. Each session maintains the API context, allowing for efficient querying without repeatedly parsing large specification files.
+Janus MCP creates sessions from OpenAPI specification files (JSON or YAML) or URLs and provides your AI with tools to explore them systematically. Each session maintains the API context, allowing for efficient querying without repeatedly parsing large specification files.
 
 Your AI assistant can initialize a session with any OpenAPI specification and then:
 
@@ -45,7 +45,7 @@ Your AI assistant can initialize a session with any OpenAPI specification and th
 
 When you're building an application that needs to integrate with a REST API:
 
-1. You provide the OpenAPI specification file to your AI assistant
+1. You provide the OpenAPI specification file or URL to your AI assistant
 2. The AI initializes a Janus session and explores the API structure, understanding its scope and organization
 3. As you describe what you want to build, the AI can reference exact endpoint details, parameter requirements, and response formats
 4. The AI understands complex data relationships and can suggest optimal integration patterns

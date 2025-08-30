@@ -33,16 +33,16 @@ class OpenAPIServer {
         tools: [
           {
             name: "initialize_session",
-            description: "Initialize a new session with an OpenAPI specification file",
+            description: "Initialize a new session with an OpenAPI specification file or URL",
             inputSchema: {
               type: "object",
               properties: {
-                filePath: {
+                source: {
                   type: "string",
-                  description: "Path to the OpenAPI JSON or YAML file"
+                  description: "Path to the OpenAPI JSON or YAML file, or URL to fetch the specification from"
                 }
               },
-              required: ["filePath"]
+              required: ["source"]
             }
           },
           {
@@ -196,8 +196,8 @@ class OpenAPIServer {
       try {
         switch (name) {
           case "initialize_session": {
-            const { filePath } = args as { filePath: string };
-            const sessionId = await this.manager.initializeSession(filePath);
+            const { source } = args as { source: string };
+            const sessionId = await this.manager.initializeSession(source);
             return {
               content: [
                 {
@@ -205,7 +205,7 @@ class OpenAPIServer {
                   text: JSON.stringify({
                     success: true,
                     sessionId,
-                    message: `Session initialized successfully for ${filePath}`
+                    message: `Session initialized successfully for ${source}`
                   }, null, 2)
                 }
               ]

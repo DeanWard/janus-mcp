@@ -26,13 +26,15 @@ export interface OpenAPIDocument {
 export interface Session {
   id: string;
   spec: OpenAPIDocument;
-  filePath: string;
+  source: string; // Can be either a file path or URL
+  sourceType: 'file' | 'url';
   createdAt: Date;
 }
 
 export interface PersistedSession {
   id: string;
-  filePath: string;
+  source: string; // Can be either a file path or URL
+  sourceType: 'file' | 'url';
   createdAt: string; // ISO string
   lastAccessed: string; // ISO string
 }

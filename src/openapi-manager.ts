@@ -17,16 +17,50 @@ export class OpenAPIManager {
     this.loadPersistedSessions();
   }
 
-  async initializeSession(filePath: string): Promise<string> {
+  private isValidUrl(str: string): boolean {
     try {
-      const fileContent = await readFile(filePath, 'utf-8');
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async fetchUrlContent(url: string): Promise<string> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
+    }
+    return await response.text();
+  }
+
+  private isYamlContent(content: string): boolean {
+    // Simple heuristic: if content starts with typical YAML indicators
+    const trimmed = content.trim();
+    return trimmed.startsWith('openapi:') || 
+           trimmed.startsWith('swagger:') || 
+           (trimmed.includes('openapi:') && !trimmed.startsWith('{'));
+  }
+
+  async initializeSession(source: string): Promise<string> {
+    try {
+      const isUrl = this.isValidUrl(source);
+      const sourceType: 'file' | 'url' = isUrl ? 'url' : 'file';
+      
+      let content: string;
+      if (isUrl) {
+        content = await this.fetchUrlContent(source);
+      } else {
+        content = await readFile(source, 'utf-8');
+      }
+
       let spec: any;
 
       // Parse YAML or JSON
-      if (filePath.endsWith('.yml') || filePath.endsWith('.yaml')) {
-        spec = load(fileContent);
+      if (source.endsWith('.yml') || source.endsWith('.yaml') || this.isYamlContent(content)) {
+        spec = load(content);
       } else {
-        spec = JSON.parse(fileContent);
+        spec = JSON.parse(content);
       }
 
       // Try to validate and dereference the OpenAPI spec
@@ -43,7 +77,8 @@ export class OpenAPIManager {
       const session: Session = {
         id: sessionId,
         spec: dereferencedSpec,
-        filePath,
+        source,
+        sourceType,
         createdAt: new Date()
       };
 
@@ -366,26 +401,49 @@ export class OpenAPIManager {
       const data = await readFile(this.persistenceFile, 'utf-8');
       const persistedSessions: PersistedSession[] = JSON.parse(data);
       
-      const persistedSession = persistedSessions.find(s => s.id === sessionId);
+      let persistedSession = persistedSessions.find(s => s.id === sessionId);
       if (!persistedSession) return;
       
-      // Check if file still exists
-      try {
-        await access(persistedSession.filePath);
-      } catch {
-        // File no longer exists, remove from persistence
-        await this.removePersistedSession(sessionId);
-        return;
+      // Handle backward compatibility: convert old filePath format to new source format
+      let sessionToUse: PersistedSession;
+      const sessionData = persistedSession as any;
+      if ('filePath' in sessionData && !('source' in sessionData)) {
+        sessionToUse = {
+          id: sessionData.id,
+          source: sessionData.filePath,
+          sourceType: 'file' as const,
+          createdAt: sessionData.createdAt,
+          lastAccessed: sessionData.lastAccessed
+        };
+      } else {
+        sessionToUse = sessionData as PersistedSession;
+      }
+      
+      // Check if file still exists (only for file sources)
+      if (sessionToUse.sourceType === 'file') {
+        try {
+          await access(sessionToUse.source);
+        } catch {
+          // File no longer exists, remove from persistence
+          await this.removePersistedSession(sessionId);
+          return;
+        }
       }
       
       // Reload the OpenAPI spec
-      const fileContent = await readFile(persistedSession.filePath, 'utf-8');
+      let content: string;
+      if (sessionToUse.sourceType === 'url') {
+        content = await this.fetchUrlContent(sessionToUse.source);
+      } else {
+        content = await readFile(sessionToUse.source, 'utf-8');
+      }
+      
       let spec: any;
       
-      if (persistedSession.filePath.endsWith('.yml') || persistedSession.filePath.endsWith('.yaml')) {
-        spec = load(fileContent);
+      if (sessionToUse.source.endsWith('.yml') || sessionToUse.source.endsWith('.yaml') || this.isYamlContent(content)) {
+        spec = load(content);
       } else {
-        spec = JSON.parse(fileContent);
+        spec = JSON.parse(content);
       }
       
       // Try to validate and dereference the OpenAPI spec
@@ -401,8 +459,9 @@ export class OpenAPIManager {
       const session: Session = {
         id: sessionId,
         spec: dereferencedSpec,
-        filePath: persistedSession.filePath,
-        createdAt: new Date(persistedSession.createdAt)
+        source: sessionToUse.source,
+        sourceType: sessionToUse.sourceType,
+        createdAt: new Date(sessionToUse.createdAt)
       };
       
       this.sessions.set(sessionId, session);
@@ -428,7 +487,8 @@ export class OpenAPIManager {
       const sessionIndex = persistedSessions.findIndex(s => s.id === session.id);
       const persistedSession: PersistedSession = {
         id: session.id,
-        filePath: session.filePath,
+        source: session.source,
+        sourceType: session.sourceType,
         createdAt: session.createdAt.toISOString(),
         lastAccessed: new Date().toISOString()
       };
