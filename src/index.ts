@@ -4,8 +4,9 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { OpenAPIManager } from "./openapi-manager.js";
-import { QueryOptions, OutputFormat } from "./types.js";
+import { QueryOptions, OutputFormat, DocumentationOptions } from "./types.js";
 import { createTransformer } from "./transformers.js";
+import { DocumentationGenerator } from "./documentation-generator.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -17,6 +18,7 @@ const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), 
 class OpenAPIServer {
   private server: Server;
   private manager: OpenAPIManager;
+  private docGenerator: DocumentationGenerator;
 
   constructor() {
     this.server = new Server(
@@ -32,6 +34,7 @@ class OpenAPIServer {
     );
 
     this.manager = new OpenAPIManager();
+    this.docGenerator = new DocumentationGenerator(this.manager);
     this.setupToolHandlers();
   }
 
@@ -213,6 +216,57 @@ class OpenAPIServer {
                 sessionId: {
                   type: "string",
                   description: "The session ID to remove"
+                }
+              },
+              required: ["sessionId"]
+            }
+          },
+          {
+            name: "generate_documentation",
+            description: "Generate comprehensive markdown documentation for the API and return the file path",
+            inputSchema: {
+              type: "object",
+              properties: {
+                sessionId: {
+                  type: "string",
+                  description: "The session ID"
+                },
+                outputDirectory: {
+                  type: "string",
+                  description: "Directory to save the documentation file (default: current working directory)"
+                },
+                filename: {
+                  type: "string",
+                  description: "Filename for the documentation (default: auto-generated from API title)"
+                },
+                format: {
+                  type: "string",
+                  enum: ["markdown", "html"],
+                  description: "Output format: 'markdown' for .md file or 'html' for interactive HTML documentation (default: markdown)"
+                },
+                includeTableOfContents: {
+                  type: "boolean",
+                  description: "Include table of contents (default: true)"
+                },
+                includeEndpoints: {
+                  type: "boolean",
+                  description: "Include endpoints documentation (default: true)"
+                },
+                includeComponents: {
+                  type: "boolean",
+                  description: "Include components/schemas documentation (default: true)"
+                },
+                includeSecurity: {
+                  type: "boolean",
+                  description: "Include security information in endpoints (default: true)"
+                },
+                includeExamples: {
+                  type: "boolean",
+                  description: "Include examples in documentation (default: false)"
+                },
+                groupByTags: {
+                  type: "boolean",
+                  description: "Group endpoints by tags (default: true)"
                 }
               },
               required: ["sessionId"]
@@ -415,6 +469,61 @@ class OpenAPIServer {
             const responseText = transformer.transformSuccess({
               success: removed,
               message: removed ? "Session removed successfully" : "Session not found"
+            });
+            
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: responseText
+                }
+              ]
+            };
+          }
+
+          case "generate_documentation": {
+            const {
+              sessionId,
+              outputDirectory,
+              filename,
+              format,
+              includeTableOfContents,
+              includeEndpoints,
+              includeComponents,
+              includeSecurity,
+              includeExamples,
+              groupByTags
+            } = args as {
+              sessionId: string;
+              outputDirectory?: string;
+              filename?: string;
+              format?: 'markdown' | 'html';
+              includeTableOfContents?: boolean;
+              includeEndpoints?: boolean;
+              includeComponents?: boolean;
+              includeSecurity?: boolean;
+              includeExamples?: boolean;
+              groupByTags?: boolean;
+            };
+
+            const options: DocumentationOptions = {
+              outputDirectory,
+              filename,
+              format,
+              includeTableOfContents,
+              includeEndpoints,
+              includeComponents,
+              includeSecurity,
+              includeExamples,
+              groupByTags
+            };
+
+            const filePath = await this.docGenerator.generateDocumentation(sessionId, options);
+            
+            const transformer = createTransformer('compact');
+            const responseText = transformer.transformSuccess({
+              success: true,
+              message: `Documentation generated successfully at: ${filePath}`
             });
             
             return {

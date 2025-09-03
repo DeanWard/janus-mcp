@@ -14,13 +14,23 @@
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["mcp", "openapi", "api", "specification", "janus", "token-optimization", "llm"],
+  "keywords": [
+    "mcp",
+    "openapi",
+    "api",
+    "specification",
+    "janus",
+    "token-optimization",
+    "llm"
+  ],
   "author": "Dean Ward",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.4",
+    "@types/marked": "^5.0.2",
     "express": "^4.18.2",
     "js-yaml": "^4.1.0",
+    "marked": "^16.2.1",
     "swagger-parser": "^10.0.3",
     "uuid": "^9.0.1"
   },

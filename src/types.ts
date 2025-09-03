@@ -101,6 +101,19 @@ export interface QueryOptions {
 // Output format types
 export type OutputFormat = 'json' | 'compact' | 'structured' | 'markdown';
 
+// Documentation generation options
+export interface DocumentationOptions {
+  outputDirectory?: string;
+  filename?: string;
+  format?: 'markdown' | 'html';
+  includeTableOfContents?: boolean;
+  includeEndpoints?: boolean;
+  includeComponents?: boolean;
+  includeSecurity?: boolean;
+  includeExamples?: boolean;
+  groupByTags?: boolean;
+}
+
 // Transformer interface
 export interface ResponseTransformer {
   transformEndpointsList(data: { count: number; endpoints: EndpointSummary[] }): string;

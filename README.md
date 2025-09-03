@@ -70,9 +70,9 @@ For example, when working with an enterprise compliance API with 88 endpoints ac
 
 Your AI can work with responses in multiple formats:
 
-**Compact**: Token-efficient format that reduces response size by 60-80% compared to JSON. Ideal for cost optimization and quick scanning of large endpoint lists.
+**Compact**: Token-efficient format that reduces response size significantly compared to JSON. Ideal for cost optimization and quick scanning of large endpoint lists.
 
-**Structured**: Readable text format with clear labels and organization. Balances readability with token efficiency, reducing size by 40-60%.
+**Structured**: Readable text format with clear labels and organization. Balances readability with token efficiency, reducing size slightly compared to JSON.
 
 **Markdown**: Formatted documentation-style output with headers, code blocks, and emphasis. Excellent for generating API documentation or detailed explanations.
 
