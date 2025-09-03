@@ -5,6 +5,13 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { OpenAPIManager } from "./openapi-manager.js";
 import { QueryOptions } from "./types.js";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, "../package.json"), "utf-8"));
 
 class OpenAPIServer {
   private server: Server;
@@ -14,7 +21,7 @@ class OpenAPIServer {
     this.server = new Server(
       {
         name: "janus-mcp",
-        version: "1.0.0",
+        version: packageJson.version,
       },
       {
         capabilities: {
