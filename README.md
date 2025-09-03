@@ -13,6 +13,7 @@ When working on API integration projects, your AI assistant can:
 - Help generate correct API calls with proper data structures
 - Explain API relationships and data flows
 - Assist with error handling by understanding expected error responses
+- Generate comprehensive documentation in markdown or interactive HTML formats
 
 ## Installation
 
@@ -46,6 +47,7 @@ Your AI assistant can initialize a session with any OpenAPI specification and th
 - Navigate complex APIs with dozens or hundreds of endpoints organized by functional areas
 - Understand relationships between endpoints, data models, and business workflows
 - Switch between output formats during the session to optimize for readability or token efficiency
+- Generate professional documentation with expanded schema details and markdown rendering
 
 ## Example Workflow
 
@@ -78,6 +80,16 @@ Your AI can work with responses in multiple formats:
 
 **JSON**: Full structured data format maintaining complete compatibility with existing integrations and tools that expect JSON responses.
 
+## Documentation Generation
+
+Your AI can generate comprehensive API documentation in two formats:
+
+**Markdown Documentation**: Traditional markdown files with detailed endpoint information, expanded schema definitions, and proper markdown rendering of API descriptions. Ideal for version control, README files, or integration with documentation platforms.
+
+**Interactive HTML Documentation**: Professional web-based documentation featuring a fixed sidebar navigation, color-coded HTTP methods, expandable schema details, and responsive design. The HTML format includes smooth scrolling navigation, required field indicators, and detailed property tables that show actual field structures instead of just type names.
+
+Both formats automatically parse and render markdown content within API descriptions, endpoint summaries, and parameter documentation. Schema references are expanded inline to show complete object structures with property types, requirements, and descriptions, eliminating the need to cross-reference separate schema sections.
+
 ## Capabilities
 
 The tools available to your AI assistant include:
@@ -89,6 +101,7 @@ The tools available to your AI assistant include:
 - Tag-based organization understanding for large, complex APIs
 - Dynamic output format switching to optimize for specific use cases
 - Support for APIs with sophisticated authentication, workflow, and data sensitivity requirements
+- Documentation generation with interactive HTML output featuring sticky navigation and expanded schemas
 
 This enables your AI to provide contextually accurate assistance whether you're exploring a new API, implementing complex business workflows, debugging integration issues, or extending existing functionality. The tool scales from simple APIs with a few endpoints to enterprise systems with hundreds of endpoints and complex data relationships. The multiple output formats allow your AI to balance between detailed information and token efficiency based on the specific task at hand.
 
