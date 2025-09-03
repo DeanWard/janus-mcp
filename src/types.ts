@@ -29,6 +29,7 @@ export interface Session {
   source: string; // Can be either a file path or URL
   sourceType: 'file' | 'url';
   createdAt: Date;
+  outputFormat: OutputFormat; // Add output format to session
 }
 
 export interface PersistedSession {
@@ -37,6 +38,7 @@ export interface PersistedSession {
   sourceType: 'file' | 'url';
   createdAt: string; // ISO string
   lastAccessed: string; // ISO string
+  outputFormat: OutputFormat; // Add output format to persistence
 }
 
 export interface EndpointSummary {
@@ -94,4 +96,18 @@ export interface QueryOptions {
   includeSchemas?: boolean;
   responseStatusCodes?: string[];
   tags?: string[];
+}
+
+// Output format types
+export type OutputFormat = 'json' | 'compact' | 'structured' | 'markdown';
+
+// Transformer interface
+export interface ResponseTransformer {
+  transformEndpointsList(data: { count: number; endpoints: EndpointSummary[] }): string;
+  transformEndpointDetails(data: EndpointDetails): string;
+  transformSessionInfo(data: { title?: string; version?: string; description?: string; baseUrl?: string }): string;
+  transformTags(data: { count: number; tags: string[] }): string;
+  transformComponents(data: any): string;
+  transformSuccess(data: { success: boolean; sessionId?: string; message: string }): string;
+  transformError(data: { error: boolean; message: string }): string;
 }

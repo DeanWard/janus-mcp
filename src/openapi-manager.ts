@@ -4,7 +4,8 @@ import { load } from 'js-yaml';
 import { v4 as uuidv4 } from 'uuid';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
-import { Session, EndpointSummary, EndpointDetails, ParameterInfo, ResponseInfo, QueryOptions, OpenAPIDocument, PersistedSession } from './types.js';
+import { Session, EndpointSummary, EndpointDetails, ParameterInfo, ResponseInfo, QueryOptions, OpenAPIDocument, PersistedSession, OutputFormat } from './types.js';
+import { getDefaultOutputFormat } from './transformers.js';
 
 export class OpenAPIManager {
   private sessions = new Map<string, Session>();
@@ -42,7 +43,7 @@ export class OpenAPIManager {
            (trimmed.includes('openapi:') && !trimmed.startsWith('{'));
   }
 
-  async initializeSession(source: string): Promise<string> {
+  async initializeSession(source: string, outputFormat?: OutputFormat): Promise<string> {
     try {
       const isUrl = this.isValidUrl(source);
       const sourceType: 'file' | 'url' = isUrl ? 'url' : 'file';
@@ -79,7 +80,8 @@ export class OpenAPIManager {
         spec: dereferencedSpec,
         source,
         sourceType,
-        createdAt: new Date()
+        createdAt: new Date(),
+        outputFormat: outputFormat || getDefaultOutputFormat()
       };
 
       this.sessions.set(sessionId, session);
@@ -113,6 +115,20 @@ export class OpenAPIManager {
       await this.removePersistedSession(sessionId);
     }
     return removed;
+  }
+
+  async setSessionOutputFormat(sessionId: string, outputFormat: OutputFormat): Promise<boolean> {
+    const session = await this.getSession(sessionId);
+    if (!session) return false;
+    
+    session.outputFormat = outputFormat;
+    await this.persistSession(session);
+    return true;
+  }
+
+  async getSessionOutputFormat(sessionId: string): Promise<OutputFormat | null> {
+    const session = await this.getSession(sessionId);
+    return session?.outputFormat || null;
   }
 
   async getSessionInfo(sessionId: string): Promise<{ title?: string; version?: string; description?: string; baseUrl?: string } | null> {
@@ -413,10 +429,14 @@ export class OpenAPIManager {
           source: sessionData.filePath,
           sourceType: 'file' as const,
           createdAt: sessionData.createdAt,
-          lastAccessed: sessionData.lastAccessed
+          lastAccessed: sessionData.lastAccessed,
+          outputFormat: sessionData.outputFormat || getDefaultOutputFormat()
         };
       } else {
-        sessionToUse = sessionData as PersistedSession;
+        sessionToUse = {
+          ...sessionData,
+          outputFormat: sessionData.outputFormat || getDefaultOutputFormat()
+        } as PersistedSession;
       }
       
       // Check if file still exists (only for file sources)
@@ -461,7 +481,8 @@ export class OpenAPIManager {
         spec: dereferencedSpec,
         source: sessionToUse.source,
         sourceType: sessionToUse.sourceType,
-        createdAt: new Date(sessionToUse.createdAt)
+        createdAt: new Date(sessionToUse.createdAt),
+        outputFormat: sessionToUse.outputFormat
       };
       
       this.sessions.set(sessionId, session);
@@ -490,7 +511,8 @@ export class OpenAPIManager {
         source: session.source,
         sourceType: session.sourceType,
         createdAt: session.createdAt.toISOString(),
-        lastAccessed: new Date().toISOString()
+        lastAccessed: new Date().toISOString(),
+        outputFormat: session.outputFormat
       };
       
       if (sessionIndex >= 0) {

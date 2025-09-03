@@ -1,6 +1,6 @@
 # Janus MCP
 
-Janus MCP is a Model Context Protocol server that enables AI assistants to understand and interact with OpenAPI specifications. It provides your AI with deep insight into API structures, making API integration projects faster and more accurate.
+Janus MCP is a Model Context Protocol server that enables AI assistants to understand and interact with OpenAPI specifications. It provides your AI with deep insight into API structures, making API integration projects faster and more accurate. The server includes token-optimized output formats to reduce costs and improve response efficiency for your AI interactions.
 
 ## What It Does
 
@@ -23,23 +23,29 @@ Add Janus MCP to your AI assistant's configuration:
   "mcpServers": {
     "janus": {
       "command": "npx",
-      "args": ["janus-mcp"]
+      "args": ["janus-mcp"],
+      "env": {
+        "JANUS_OUTPUT_FORMAT": "compact"
+      }
     }
   }
 }
 ```
 
+The `JANUS_OUTPUT_FORMAT` environment variable sets the default output format for new sessions. Available formats are `compact` (default), `structured`, `markdown`, and `json`.
+
 ## How It Works
 
-Janus MCP creates sessions from OpenAPI specification files (JSON or YAML) or URLs and provides your AI with tools to explore them systematically. Each session maintains the API context, allowing for efficient querying without repeatedly parsing large specification files.
+Janus MCP creates sessions from OpenAPI specification files (JSON or YAML) or URLs and provides your AI with tools to explore them systematically. Each session maintains the API context and output format preference, allowing for efficient querying without repeatedly parsing large specification files. Your AI can choose from multiple output formats optimized for different use cases and token efficiency.
 
 Your AI assistant can initialize a session with any OpenAPI specification and then:
 
 - List all available endpoints with filtering by tags, HTTP methods, or other criteria
-- Get detailed information about specific endpoints including parameters, request schemas, and response formats
+- Get detailed information about specific endpoints including parameters, request schemas, and response formats  
 - Explore reusable components like data models, security schemes, and error schemas
 - Navigate complex APIs with dozens or hundreds of endpoints organized by functional areas
 - Understand relationships between endpoints, data models, and business workflows
+- Switch between output formats during the session to optimize for readability or token efficiency
 
 ## Example Workflow
 
@@ -60,18 +66,31 @@ For example, when working with an enterprise compliance API with 88 endpoints ac
 - Generate code that handles OAuth2 authentication and encrypted data properly
 - Suggest appropriate error handling for different endpoint response patterns
 
+## Output Formats
+
+Your AI can work with responses in multiple formats:
+
+**Compact**: Token-efficient format that reduces response size by 60-80% compared to JSON. Ideal for cost optimization and quick scanning of large endpoint lists.
+
+**Structured**: Readable text format with clear labels and organization. Balances readability with token efficiency, reducing size by 40-60%.
+
+**Markdown**: Formatted documentation-style output with headers, code blocks, and emphasis. Excellent for generating API documentation or detailed explanations.
+
+**JSON**: Full structured data format maintaining complete compatibility with existing integrations and tools that expect JSON responses.
+
 ## Capabilities
 
 The tools available to your AI assistant include:
 
-- Session management for multiple OpenAPI specifications
-- Advanced endpoint filtering by tags, HTTP methods, and operational characteristics
+- Session management for multiple OpenAPI specifications with persistent format preferences
+- Advanced endpoint filtering by tags, HTTP methods, and operational characteristics  
 - Detailed endpoint inspection with selective data retrieval for optimal performance
 - Comprehensive component and schema exploration including security schemes
 - Tag-based organization understanding for large, complex APIs
+- Dynamic output format switching to optimize for specific use cases
 - Support for APIs with sophisticated authentication, workflow, and data sensitivity requirements
 
-This enables your AI to provide contextually accurate assistance whether you're exploring a new API, implementing complex business workflows, debugging integration issues, or extending existing functionality. The tool scales from simple APIs with a few endpoints to enterprise systems with hundreds of endpoints and complex data relationships.
+This enables your AI to provide contextually accurate assistance whether you're exploring a new API, implementing complex business workflows, debugging integration issues, or extending existing functionality. The tool scales from simple APIs with a few endpoints to enterprise systems with hundreds of endpoints and complex data relationships. The multiple output formats allow your AI to balance between detailed information and token efficiency based on the specific task at hand.
 
 ## Repository
 

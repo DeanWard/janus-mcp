@@ -4,7 +4,8 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { OpenAPIManager } from "./openapi-manager.js";
-import { QueryOptions } from "./types.js";
+import { QueryOptions, OutputFormat } from "./types.js";
+import { createTransformer } from "./transformers.js";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -47,9 +48,33 @@ class OpenAPIServer {
                 source: {
                   type: "string",
                   description: "Path to the OpenAPI JSON or YAML file, or URL to fetch the specification from"
+                },
+                outputFormat: {
+                  type: "string",
+                  enum: ["json", "compact", "structured", "markdown"],
+                  description: "Output format for responses (default: compact). Can be changed later with set_output_format."
                 }
               },
               required: ["source"]
+            }
+          },
+          {
+            name: "set_output_format",
+            description: "Change the output format for a session",
+            inputSchema: {
+              type: "object",
+              properties: {
+                sessionId: {
+                  type: "string",
+                  description: "The session ID"
+                },
+                outputFormat: {
+                  type: "string",
+                  enum: ["json", "compact", "structured", "markdown"],
+                  description: "New output format: 'json' (full JSON), 'compact' (minimal text), 'structured' (readable text), 'markdown' (formatted docs)"
+                }
+              },
+              required: ["sessionId", "outputFormat"]
             }
           },
           {
@@ -203,17 +228,45 @@ class OpenAPIServer {
       try {
         switch (name) {
           case "initialize_session": {
-            const { source } = args as { source: string };
-            const sessionId = await this.manager.initializeSession(source);
+            const { source, outputFormat } = args as { source: string; outputFormat?: OutputFormat };
+            const sessionId = await this.manager.initializeSession(source, outputFormat);
+            
+            const transformer = createTransformer(outputFormat || 'compact');
+            const responseText = transformer.transformSuccess({
+              success: true,
+              sessionId,
+              message: `Session initialized successfully for ${source}`
+            });
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    success: true,
-                    sessionId,
-                    message: `Session initialized successfully for ${source}`
-                  }, null, 2)
+                  text: responseText
+                }
+              ]
+            };
+          }
+
+          case "set_output_format": {
+            const { sessionId, outputFormat } = args as { sessionId: string; outputFormat: OutputFormat };
+            const success = await this.manager.setSessionOutputFormat(sessionId, outputFormat);
+            
+            if (!success) {
+              throw new Error("Session not found");
+            }
+            
+            const transformer = createTransformer(outputFormat);
+            const responseText = transformer.transformSuccess({
+              success: true,
+              message: `Output format changed to ${outputFormat}`
+            });
+            
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: responseText
                 }
               ]
             };
@@ -225,11 +278,16 @@ class OpenAPIServer {
             if (!info) {
               throw new Error("Session not found");
             }
+            
+            const format = await this.manager.getSessionOutputFormat(sessionId) || 'compact';
+            const transformer = createTransformer(format);
+            const responseText = transformer.transformSessionInfo(info);
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(info, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -238,14 +296,19 @@ class OpenAPIServer {
           case "list_endpoints": {
             const { sessionId, tags, methods } = args as { sessionId: string; tags?: string[]; methods?: string[] };
             const endpoints = await this.manager.listEndpoints(sessionId, tags, methods);
+            
+            const format = await this.manager.getSessionOutputFormat(sessionId) || 'compact';
+            const transformer = createTransformer(format);
+            const responseText = transformer.transformEndpointsList({
+              count: endpoints.length,
+              endpoints
+            });
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    count: endpoints.length,
-                    endpoints
-                  }, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -291,11 +354,15 @@ class OpenAPIServer {
               throw new Error(`Endpoint not found: ${method.toUpperCase()} ${path}`);
             }
 
+            const format = await this.manager.getSessionOutputFormat(sessionId) || 'compact';
+            const transformer = createTransformer(format);
+            const responseText = transformer.transformEndpointDetails(details);
+
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(details, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -304,14 +371,19 @@ class OpenAPIServer {
           case "get_tags": {
             const { sessionId } = args as { sessionId: string };
             const tags = await this.manager.getTags(sessionId);
+            
+            const format = await this.manager.getSessionOutputFormat(sessionId) || 'compact';
+            const transformer = createTransformer(format);
+            const responseText = transformer.transformTags({
+              count: tags.length,
+              tags
+            });
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    count: tags.length,
-                    tags
-                  }, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -320,11 +392,16 @@ class OpenAPIServer {
           case "get_components": {
             const { sessionId, componentType } = args as { sessionId: string; componentType?: string };
             const components = await this.manager.getComponents(sessionId, componentType);
+            
+            const format = await this.manager.getSessionOutputFormat(sessionId) || 'compact';
+            const transformer = createTransformer(format);
+            const responseText = transformer.transformComponents(components);
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify(components, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -333,14 +410,18 @@ class OpenAPIServer {
           case "remove_session": {
             const { sessionId } = args as { sessionId: string };
             const removed = await this.manager.removeSession(sessionId);
+            
+            const transformer = createTransformer('compact'); // Use compact for simple responses
+            const responseText = transformer.transformSuccess({
+              success: removed,
+              message: removed ? "Session removed successfully" : "Session not found"
+            });
+            
             return {
               content: [
                 {
                   type: "text",
-                  text: JSON.stringify({
-                    success: removed,
-                    message: removed ? "Session removed successfully" : "Session not found"
-                  }, null, 2)
+                  text: responseText
                 }
               ]
             };
@@ -350,14 +431,17 @@ class OpenAPIServer {
             throw new Error(`Unknown tool: ${name}`);
         }
       } catch (error) {
+        const transformer = createTransformer('compact'); // Use compact for errors
+        const responseText = transformer.transformError({
+          error: true,
+          message: error instanceof Error ? error.message : "Unknown error occurred"
+        });
+        
         return {
           content: [
             {
               type: "text",
-              text: JSON.stringify({
-                error: true,
-                message: error instanceof Error ? error.message : "Unknown error occurred"
-              }, null, 2)
+              text: responseText
             }
           ],
           isError: true
